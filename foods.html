@@ -3,8 +3,47 @@
 <head>
   <meta charset="utf-8">
   <title>Quantified Self - Manage Foods</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.2/css/materialize.min.css">
+  <link rel="stylesheet" type="text/css" href="main.css">
+  <link rel="stylesheet" type="text/css" href="foods.css">
 </head>
 <body>
+  <div class="row">
+    <div class="col s2">
+      <p></p>
+    </div>
+    <div class="col s8">
+      <div class="card">
+        <div class="card-content">
+          <span class="card-title center">Foods</span>
+          <form id='new-food' name='food-form'>
+            <div class="input-field">
+              <input name='food-name' placeholder='Name' id='name-field'/>
+            </div>
+            <div class="input-field">
+              <input name='food-calories' placeholder='Calories' id="calorie-field" type='text'/>
+            </div>
+            <input type='submit' value='Add Food' class='btn indigo' />
+          </form>
+        </div>
+        <div class="card-action">
+          <table class="foods">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Calories</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <script src="main.bundle.js"></script>
 </body>
