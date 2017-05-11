@@ -1,6 +1,9 @@
 
-.error {
+.calorie-error {
   color: red;
-  height: 50px;
+  display: block;
+}
+.name-error {
+  color: red;
   display: block;
 }
