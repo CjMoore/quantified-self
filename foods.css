@@ -1,4 +1,6 @@
 
 .error {
   color: red;
+  height: 50px;
+  display: block;
 }

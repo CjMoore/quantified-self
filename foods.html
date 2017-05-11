@@ -19,8 +19,12 @@
         <div class="card-content">
           <span class="card-title center">Foods</span>
           <form id='new-food' name='food-form'>
-            <input name='food-name' placeholder='Name' id='name-field'/>
-            <input name='food-calories' placeholder='Calories' />
+            <div class="input-field">
+              <input name='food-name' placeholder='Name' id='name-field'/>
+            </div>
+            <div class="input-field">
+              <input name='food-calories' placeholder='Calories' id="calorie-field" type='text'/>
+            </div>
             <input type='submit' value='Add Food' class='btn indigo' />
           </form>
         </div>
@@ -36,7 +40,6 @@
             <tbody>
             </tbody>
           </table>
-
         </div>
       </div>
     </div>
