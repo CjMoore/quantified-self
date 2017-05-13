@@ -9,8 +9,162 @@
 </head>
 <body>
 
-  <div class="container">
+  <div class="container" id='date-container'>
+  </div>
+  <div class="row">
+    <div class='col s5 push-s1'>
+      <div class='card'>
+        <div class='card-content'>
+          <span class='card-title center'>Breakfast</span>
+          <table>
+            <thead>
+              <tr>
+                <th>Food</th>
+                <th>Calories</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id='breakfast-body'>
+              <tr>
+                <td class='calorie-data'>Total Calories</td>
+                <td class='calorie-data' id='breakfast-total-calories'></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td class='calorie-data'>Remaining Calories</td>
+                <td class='calorie-data' id='breakfast-remaining-calories'></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class='card'>
+        <div class='card-content'>
+          <span class='card-title center'>Dinner</span>
+            <table>
+              <thead>
+                <tr>
+                  <th>Food</th>
+                  <th>Calories</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id='dinner-body'>
+                <tr>
+                  <td class='calorie-data'>Total Calories</td>
+                  <td class='calorie-data' id='dinner-total-calories'></td>
+                </tr>
+                <tr>
+                  <td class='calorie-data'>Remaining Calories</td>
+                  <td class='calorie-data' id='snacks-remaining-calories'></td>
+                </tr>
+              </tbody>
+            </table>
+        </div>
+      </div>
+      <div class='card'>
+        <div class='card-content'>
+          <span class='card-title center'>Foods</span>
+          <h4>Foods</h4>
+            <a class="waves-effect waves-light btn-large green">Create New Food</a>
+            <h5>Add Selected To</h5>
+            <a class="waves-effect waves-light btn-large green">Breakfast</a>
+            <a class="waves-effect waves-light btn-large green center">Lunch</a>
+            <h6></h6>
+            <a class="waves-effect waves-light btn-large green">Dinner</a>
+            <a class="waves-effect waves-light btn-large green center">Snacks</a>
+            <h5>Search By Name</h5>
+            <div class='input-field'>
+              <input type='text' id='food-filter' />
+            </div>
+            <h6></h6>
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Calories</th>
+                  <th>Select</th>
+                </tr>
+              </thead>
+              <tbody id='diary-foods-body'>
+              </tbody>
+            </table>
+        </div>
+      </div>
 
+    </div>
+      <div class='col s5 push-s1'>
+        <div class='card'>
+          <div class='card-content'>
+            <span class='card-title center'>Lunch</span>
+            <table>
+              <thead>
+                <tr>
+                  <th>Food</th>
+                  <th>Calories</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id='lunch-body'>
+                <tr>
+                  <td class='calorie-data'>Total Calories</td>
+                  <td class='calorie-data' id='lunch-total-calories'></td>
+                </tr>
+                <tr>
+                  <td class='calorie-data'>Remaining Calories</td>
+                  <td class='calorie-data' id='lunch-remaining-calories'></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class='card'>
+          <div class='card-content'>
+            <span class='card-title center'>Snacks</span>
+            <table>
+              <thead>
+                <tr>
+                  <th>Food</th>
+                  <th>Calories</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id='snacks-body'>
+                <tr>
+                  <td class='calorie-data'>Total Calories</td>
+                  <td class='calorie-data' id='snacks-total-calories'></td>
+                </tr>
+                <tr>
+                  <td class='calorie-data'>Remaining Calories</td>
+                  <td class='calorie-data' id='snacks-remaining-calories'></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class='card'>
+          <div class='card-content'>
+            <span class='card-title center'>Totals</span>
+            <table>
+              <tbody>
+                <tr>
+                  <td class='calorie-data'>Goal Calories</td>
+                  <td class='calorie-data' id='goal-calories'></td>
+                </tr>
+                <tr>
+                  <td class='calorie-data'>Calories Consumed</td>
+                  <td class='calorie-data' id='consumed-calories'></td>
+                </tr>
+                <tr>
+                  <td class='calorie-data'>Remaining Calories</td>
+                  <td class='calorie-data' id='remaining-calories'></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="main.bundle.js"></script>
