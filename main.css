@@ -2,3 +2,30 @@
 body {
   background: #917788;
 }
+
+#date-display{
+  display: inline-block;
+  margin: 0;
+  align-self: center;
+}
+
+#next-page-btn{
+  float: right;
+}
+
+#prev-page-btn{
+  float: left;
+}
+
+table{
+  background-color: white;
+}
+
+.calorie-data{
+  font-weight: bold;
+}
+#food-filter{
+  align-self: center;
+  background-color: white;
+  font-color: black;
+}

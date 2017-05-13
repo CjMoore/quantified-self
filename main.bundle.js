@@ -10427,9 +10427,9 @@
 	    formattedDate = `${diaryYear}-0${diaryMonth}-0${diaryDay}`;
 	    todaysDate = todaysDate.toDateString().slice(4);
 	    const dateObject = { date: formattedDate };
-	    const date = `<div class='row'><div class='col s6'><button class='btn'><</button><h1>${todaysDate}</h1><button class='btn'>></button></div></div>`;
+	    const date = `<div class='row'><div class='col s6 offset-s3' id='date-box'><button class='btn' id='prev-page-btn'><</button><h3 id='date-display'>${todaysDate}</h3><button class='btn' id='next-page-btn'>></button></div></div>`;
 
-	    $('.container').append(date);
+	    $('#date-container').append(date);
 
 	    return $.ajax({
 	      url: API + 'diaries/meals',
