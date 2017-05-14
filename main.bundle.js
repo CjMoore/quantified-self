@@ -10579,6 +10579,11 @@
 	  let currentValue = parseInt($(`#${mealName}-remaining-calories`).text());
 	  let updatedValue = currentValue - food.calories;
 	  $(`#${mealName}-remaining-calories`).text(updatedValue);
+	  if (updatedValue < 0) {
+	    $(`#${mealName}-remaining-calories`).css('color', 'red');
+	  } else if (updatedValue > 0) {
+	    $(`#${mealName}-remaining-calories`).css('color', 'green');
+	  }
 	}
 
 	function addFoodstoMealTable(meal, mealName) {
