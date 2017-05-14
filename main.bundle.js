@@ -10523,7 +10523,22 @@
 	      console.error(error);
 	    });
 	  }
+
+	  getFoods() {
+	    return $.ajax({
+	      method: 'GET',
+	      url: API + 'foods'
+	    }).done(makeFoodTable).fail(error => {
+	      console.error(error);
+	    });
+	  }
 	};
+
+	function makeFoodTable(data) {
+	  data.forEach(food => {
+	    $('#diary-foods-body').prepend(`<tr data-food-id=${food.id}><td class='food-cell' >${food.name}</td><td class='calorie-cell'>${food.calories}</td><td><input type="checkbox" id="${food.id}" /><label for="${food.id}"></label></td></tr>`);
+	  });
+	}
 
 	function updateMealRemainingCalories(mealName, food) {
 	  let currentValue = parseInt($(`#${mealName}-remaining-calories`).text());
@@ -10551,8 +10566,11 @@
 	  let updatedValue = currentValue + food.calories;
 	  $(`#${mealName}-total-calories`).text(updatedValue);
 	}
+
 	$(document).ready(function () {
 	  const diary = new Diary();
+
+	  diary.getFoods();
 
 	  diary.getDiary();
 	  $('form').on('submit', event => event.preventDefault());
