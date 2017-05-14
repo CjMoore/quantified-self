@@ -10526,7 +10526,8 @@
 	};
 	function addFoodstoMealTable(meal, mealName) {
 	  meal.foods.forEach(food => {
-	    $(`#${mealName}-body`).prepend(`<tr><td >${food.name}</td><td>${food.calories}</td><td></td></tr>`);
+	    $(`#${mealName}-body`).prepend(`<tr><td >${food.name}</td><td id='${mealName}-calories'>${food.calories}</td><td></td></tr>`);
+	    updateMealTotalCalories(mealName, food);
 	  });
 	}
 	function populateMealsTables(data) {
@@ -10534,6 +10535,12 @@
 	    let mealName = meal.name;
 	    addFoodstoMealTable(meal, mealName);
 	  });
+	}
+
+	function updateMealTotalCalories(mealName, food) {
+	  let currentValue = parseInt($(`#${mealName}-total-calories`).text());
+	  let updatedValue = currentValue + food.calories;
+	  $(`#${mealName}-total-calories`).text(updatedValue);
 	}
 	$(document).ready(function () {
 	  const diary = new Diary();
