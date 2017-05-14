@@ -10513,6 +10513,7 @@
 	const LOCAL = 'http://localhost:3000/api/v1/';
 	$ = __webpack_require__(2);
 
+	const mealNames = ["Breakfast", "Lunch", "Dinner", "Snacks"];
 	const Diary = class Diary {
 
 	  getDiary() {
@@ -10587,8 +10588,23 @@
 	    updateMealTotalCalories(mealName, food);
 	    updateMealRemainingCalories(mealName, food);
 	  });
+	  updateConsumedCalories();
 	}
 
+	function updateConsumedCalories() {
+	  $('#consumed-calories').text(0);
+	  mealNames.forEach(mealName => {
+	    let mealCalories = parseInt($(`#${mealName}-total-calories`).text());
+	    let totalCalories = parseInt($('#consumed-calories').text());
+	    $('#consumed-calories').text(`${mealCalories + totalCalories}`);
+	  });
+	  updateRemainingCalories();
+	}
+
+	function updateRemainingCalories() {
+	  let consumedCalories = parseInt($('#consumed-calories').text());
+	  $('#remaining-calories').text(`${2000 - consumedCalories}`);
+	}
 	function populateMealsTables(data) {
 	  $('#date-box').attr('data-diary-id', `${data[0].diary_id}`);
 	  data.forEach(meal => {
@@ -10622,6 +10638,8 @@
 	  $(`#${mealName}-body`).prepend(`<tr><td >${data.name}</td><td id='${mealName}-calories'>${data.calories}</td><td></td></tr>`);
 	  updateMealTotalCalories(mealName, data);
 	  updateMealRemainingCalories(mealName, data);
+	  updateRemainingCalories();
+	  updateConsumedCalories();
 	}
 
 	function searchFoods() {
