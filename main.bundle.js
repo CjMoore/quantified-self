@@ -182,6 +182,20 @@
 	  $(td).text(data[0].calories);
 	}
 
+	function searchFoods() {
+	  let searchName = $('#food-filter').val();
+	  $('.foods tbody').html('');
+	  return $.ajax({
+	    url: `${API}search?searchName=${searchName}`,
+	    method: 'GET'
+	  }).done(makeFoodTable).fail(error => {
+	    console.error(error);
+	  });
+	}
+
+	$('#food-filter').on('input', function () {
+	  searchFoods();
+	});
 	$(document).ready(function () {
 	  const food = new Food();
 	  food.getAll();
@@ -10577,6 +10591,7 @@
 	    console.error(error);
 	  });
 	}
+
 	$('#food-filter').on('input', function () {
 	  searchFoods();
 	});
