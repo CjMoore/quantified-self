@@ -10588,12 +10588,14 @@
 	}
 
 	function addFoodstoMealTable(meal, mealName) {
-	  meal.foods.forEach(food => {
-	    $(`#${mealName}-body`).prepend(`<tr><td >${food.name}</td><td id='${mealName}-calories'>${food.calories}</td><td></td></tr>`);
-	    updateMealTotalCalories(mealName, food);
-	    updateMealRemainingCalories(mealName, food);
-	  });
-	  updateConsumedCalories();
+	  if (meal.foods.length > 0) {
+	    meal.foods.forEach(food => {
+	      $(`#${mealName}-body`).prepend(`<tr><td >${food.name}</td><td id='${mealName}-calories'>${food.calories}</td><td></td></tr>`);
+	      updateMealTotalCalories(mealName, food);
+	      updateMealRemainingCalories(mealName, food);
+	    });
+	    updateConsumedCalories();
+	  }
 	}
 
 	function updateConsumedCalories() {
@@ -10609,6 +10611,11 @@
 	function updateRemainingCalories() {
 	  let consumedCalories = parseInt($('#consumed-calories').text());
 	  $('#remaining-calories').text(`${2000 - consumedCalories}`);
+	  if (2000 - consumedCalories < 0) {
+	    $('#remaining-calories').css('color', 'red');
+	  } else {
+	    $('#remaining-calories').css('color', 'green');
+	  }
 	}
 	function populateMealsTables(data) {
 	  $('#date-box').attr('data-diary-id', `${data[0].diary_id}`);
