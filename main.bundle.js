@@ -10514,6 +10514,8 @@
 	$ = __webpack_require__(2);
 
 	const mealNames = ["Breakfast", "Lunch", "Dinner", "Snacks"];
+	let counter = 0;
+
 	const Diary = class Diary {
 
 	  getDiary() {
@@ -10568,7 +10570,90 @@
 	      });
 	    });
 	  }
+
+	  getPrevious() {
+	    let todaysDate = new Date();
+	    todaysDate.setDate(todaysDate.getDate() + counter);
+
+	    let formattedDate = todaysDate;
+	    let diaryDay = formattedDate.getDate();
+	    let diaryMonth = formattedDate.getMonth() + 1;
+	    let diaryYear = formattedDate.getFullYear();
+
+	    formattedDate = `${diaryYear}-0${diaryMonth}-0${diaryDay}`;
+	    todaysDate = todaysDate.toDateString().slice(4);
+	    const dateObject = { date: formattedDate };
+	    const date = `<div class='row'><div class='col s6 offset-s3' id='date-box'><button class='btn' id='prev-page-btn'><</button><h3 id='date-display'>${todaysDate}</h3><button class='btn' id='next-page-btn'>></button></div></div>`;
+
+	    $('#Lunch-body').empty();
+	    $('#Dinner-body').empty();
+	    $('#Snacks-body').empty();
+	    $('#Breakfast-body').empty();
+
+	    resetCalories();
+
+	    $('#date-container').empty();
+	    $('#date-container').append(date);
+
+	    return $.ajax({
+	      url: API + 'diaries/meals',
+	      method: 'GET',
+	      data: dateObject
+	    }).done(populateMealsTables).fail(error => {
+	      console.error(error);
+	    });
+	  }
+
+	  getNext() {
+	    let todaysDate = new Date();
+	    todaysDate.setDate(todaysDate.getDate() + counter);
+
+	    let formattedDate = todaysDate;
+	    let diaryDay = formattedDate.getDate();
+	    let diaryMonth = formattedDate.getMonth() + 1;
+	    let diaryYear = formattedDate.getFullYear();
+
+	    formattedDate = `${diaryYear}-0${diaryMonth}-0${diaryDay}`;
+	    todaysDate = todaysDate.toDateString().slice(4);
+	    const dateObject = { date: formattedDate };
+	    const date = `<div class='row'><div class='col s6 offset-s3' id='date-box'><button class='btn' id='prev-page-btn'><</button><h3 id='date-display'>${todaysDate}</h3><button class='btn' id='next-page-btn'>></button></div></div>`;
+
+	    $('#Lunch-body').empty();
+	    $('#Dinner-body').empty();
+	    $('#Snacks-body').empty();
+	    $('#Breakfast-body').empty();
+
+	    resetCalories();
+
+	    $('#date-container').empty();
+	    $('#date-container').append(date);
+
+	    return $.ajax({
+	      url: API + 'diaries/meals',
+	      method: 'GET',
+	      data: dateObject
+	    }).done(populateMealsTables).fail(error => {
+	      console.error(error);
+	    });
+	  }
 	};
+
+	function resetCalories() {
+	  $('#Breakfast-total-calories').text(0);
+	  $('#Breakfast-remaining-calories').css('color', 'green').text(400);
+
+	  $('#Dinner-total-calories').text(0);
+	  $('#Dinner-remaining-calories').css('color', 'green').text(800);
+
+	  $('#Lunch-total-calories').text(0);
+	  $('#Lunch-remaining-calories').css('color', 'green').text(600);
+
+	  $('#Snacks-total-calories').text(0);
+	  $('#Snacks-remaining-calories').css('color', 'green').text(200);
+
+	  $('#consumed-calories').text(0);
+	  $('#remaining-calories').css('color', 'green').text(2000);
+	}
 
 	function makeFoodTable(data) {
 	  data.forEach(food => {
@@ -10588,7 +10673,8 @@
 	}
 
 	function addFoodstoMealTable(meal, mealName) {
-	  if (meal.foods.length > 0) {
+
+	  if (Array.isArray(meal.foods)) {
 	    meal.foods.forEach(food => {
 	      $(`#${mealName}-body`).prepend(`<tr><td >${food.name}</td><td id='${mealName}-calories'>${food.calories}</td><td></td></tr>`);
 	      updateMealTotalCalories(mealName, food);
@@ -10618,11 +10704,15 @@
 	  }
 	}
 	function populateMealsTables(data) {
-	  $('#date-box').attr('data-diary-id', `${data[0].diary_id}`);
-	  data.forEach(meal => {
-	    let mealName = meal.name;
-	    addFoodstoMealTable(meal, mealName);
-	  });
+	  if (Array.isArray(data)) {
+	    $('#date-box').attr('data-diary-id', `${data[0].diary_id}`);
+	    data.forEach(meal => {
+	      let mealName = meal.name;
+	      addFoodstoMealTable(meal, mealName);
+	    });
+	  } else {
+	    $('#date-box').attr('data-diary-id', `${data.id}`);
+	  }
 	}
 
 	function updateMealTotalCalories(mealName, food) {
@@ -10688,6 +10778,17 @@
 	  $('#Snacks').on('click', event => {
 	    diary.addMeal();
 	  });
+
+	  $('body').on('click', '#prev-page-btn', event => {
+	    counter = counter - 1;
+	    diary.getPrevious();
+	  });
+
+	  $('body').on('click', '#next-page-btn', event => {
+	    counter = counter + 1;
+	    diary.getNext();
+	  });
+
 	  $('form').on('submit', event => event.preventDefault());
 	});
 
