@@ -46,7 +46,7 @@
 
 	// const Food =
 	__webpack_require__(1);
-	__webpack_require__(3);
+	__webpack_require__(6);
 
 /***/ }),
 /* 1 */
@@ -54,15 +54,18 @@
 
 	const API = 'https://qs-be.herokuapp.com/api/v1/';
 	const LOCAL = 'http://localhost:3000/api/v1/';
-	$ = __webpack_require__(2);
+	const $ = __webpack_require__(2);
+	const FoodRemove = __webpack_require__(3);
+	const FoodAdd = __webpack_require__(4);
+	const FoodTable = __webpack_require__(5);
 
 	const Food = class Food {
 
 	  constructor() {
-	    this.getAll();
+	    FoodTable.getAll();
 
 	    $('.foods').on('click', '.remove', event => {
-	      this.remove();
+	      FoodRemove.remove();
 	    });
 
 	    $('.foods').on('click', '.food-cell', event => {
@@ -102,60 +105,9 @@
 	      });
 	    });
 
-	    $('#new-food').submit(event => this.addFood());
+	    $('#new-food').submit(event => FoodAdd.addFood());
 
 	    $('form').on('submit', event => event.preventDefault());
-	  }
-
-	  getAll() {
-	    return $.ajax({
-	      method: 'GET',
-	      url: API + 'foods'
-	    }).then(data => {
-	      this.makeFoodTable(data);
-	    }).fail(error => {
-	      console.error(error);
-	    });
-	  }
-
-	  remove() {
-	    const button = event.target;
-	    const id = $(button).data("food-id");
-
-	    return $.ajax({
-	      url: API + `foods/${id}`,
-	      method: 'DELETE'
-	    }).done(this.removeFromFoodTable(button)).fail(error => {
-	      console.error(error);
-	    });
-	  }
-
-	  addFood() {
-	    let form = $('#new-food');
-	    let newFood = {};
-	    newFood['name'] = $("input[name=food-name]").val();
-	    newFood['calories'] = $("input[name=food-calories]").val();
-	    $('.calorie-error').empty().remove();
-	    $('.name-error').empty().remove();
-
-	    if (newFood.name == "" && newFood.calories == "") {
-	      this.caloriesError();
-	      this.nameError();
-	    } else if (newFood.calories == "") {
-	      this.caloriesError();
-	    } else if (newFood.name == "") {
-	      this.nameError();
-	    } else {
-	      return $.ajax({
-	        url: API + 'foods',
-	        method: 'POST',
-	        data: newFood
-	      }).then(data => {
-	        this.addToFoodTable(data);
-	      }).fail(error => {
-	        console.error(error);
-	      });
-	    };
 	  }
 
 	  editName() {
@@ -192,25 +144,6 @@
 	    });
 	  }
 
-	  makeFoodTable(data) {
-	    data.forEach(food => {
-	      $('.foods tbody').prepend(`<tr data-food-id=${food.id}><td class='food-cell' >${food.name}</td><td class='calorie-cell'>${food.calories}</td><td><button data-food-id=${food.id} class='remove btn red darken-3'>-</button></td></tr>`);
-	    });
-	  }
-
-	  removeFromFoodTable(button) {
-	    $(button).parent().parent().empty().remove();
-	  }
-
-	  addToFoodTable(data) {
-	    const food = data[0];
-	    $(`<tr data-food-id=${food.id}><td class='food-cell'>${food.name}</td><td class='calorie-cell'>${food.calories}</td><td><button data-food-id=${food.id} class='remove btn red darken-3'>-</button></td></tr>`).prependTo('.foods tbody');
-	    $('.calorie-error').empty().remove();
-	    $('.name-error').empty().remove();
-	    $('input[name=food-name]').val('');
-	    $('input[name=food-calories]').val('');
-	  }
-
 	  searchFoods() {
 	    let searchName = $('#food-filter').val();
 	    $('.foods tbody').html('');
@@ -223,15 +156,7 @@
 	      console.error(error);
 	    });
 	  }
-	  caloriesError() {
-	    $('.calorie-error').empty().remove();
-	    $('#calorie-field').parent().after(`<div class='calorie-error'>Please enter a calorie amount</div>`);
-	  }
-	  nameError() {
-	    $('.name-error').empty().remove();
-	    $('#name-field').parent().after(`<div class='name-error'>Please enter a food name
-	    </divl>`);
-	  }
+
 	  updateCellName(data, tr) {
 	    const td = $(tr).children()[0];
 	    $(td).children()[0].remove();
@@ -10516,6 +10441,126 @@
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	const API = 'https://qs-be.herokuapp.com/api/v1/';
+	const LOCAL = 'http://localhost:3000/api/v1/';
+	const $ = __webpack_require__(2);
+
+	class FoodRemove {
+
+	  remove() {
+	    const button = event.target;
+	    const id = $(button).data("food-id");
+
+	    return $.ajax({
+	      url: API + `foods/${id}`,
+	      method: 'DELETE'
+	    }).done(this.removeFromFoodTable(button)).fail(error => {
+	      console.error(error);
+	    });
+	  }
+
+	  removeFromFoodTable(button) {
+	    $(button).parent().parent().empty().remove();
+	  }
+	}
+
+	module.exports = new FoodRemove();
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	const API = 'https://qs-be.herokuapp.com/api/v1/';
+	const LOCAL = 'http://localhost:3000/api/v1/';
+	const $ = __webpack_require__(2);
+
+	class FoodAdd {
+
+	  addFood() {
+	    let form = $('#new-food');
+	    let newFood = {};
+	    newFood['name'] = $("input[name=food-name]").val();
+	    newFood['calories'] = $("input[name=food-calories]").val();
+	    $('.calorie-error').empty().remove();
+	    $('.name-error').empty().remove();
+
+	    if (newFood.name == "" && newFood.calories == "") {
+	      this.caloriesError();
+	      this.nameError();
+	    } else if (newFood.calories == "") {
+	      this.caloriesError();
+	    } else if (newFood.name == "") {
+	      this.nameError();
+	    } else {
+	      return $.ajax({
+	        url: API + 'foods',
+	        method: 'POST',
+	        data: newFood
+	      }).then(data => {
+	        this.addToFoodTable(data);
+	      }).fail(error => {
+	        console.error(error);
+	      });
+	    };
+	  }
+
+	  caloriesError() {
+	    $('.calorie-error').empty().remove();
+	    $('#calorie-field').parent().after(`<div class='calorie-error'>Please enter a calorie amount</div>`);
+	  }
+
+	  nameError() {
+	    $('.name-error').empty().remove();
+	    $('#name-field').parent().after(`<div class='name-error'>Please enter a food name
+	     </divl>`);
+	  }
+
+	  addToFoodTable(data) {
+	    const food = data[0];
+	    $(`<tr data-food-id=${food.id}><td class='food-cell'>${food.name}</td><td class='calorie-cell'>${food.calories}</td><td><button data-food-id=${food.id} class='remove btn red darken-3'>-</button></td></tr>`).prependTo('.foods tbody');
+	    $('.calorie-error').empty().remove();
+	    $('.name-error').empty().remove();
+	    $('input[name=food-name]').val('');
+	    $('input[name=food-calories]').val('');
+	  }
+	}
+
+	module.exports = new FoodAdd();
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	const API = 'https://qs-be.herokuapp.com/api/v1/';
+	const LOCAL = 'http://localhost:3000/api/v1/';
+	const $ = __webpack_require__(2);
+
+	class FoodTable {
+
+	  getAll() {
+	    return $.ajax({
+	      method: 'GET',
+	      url: API + 'foods'
+	    }).then(data => {
+	      this.makeFoodTable(data);
+	    }).fail(error => {
+	      console.error(error);
+	    });
+	  }
+
+	  makeFoodTable(data) {
+	    data.forEach(food => {
+	      $('.foods tbody').prepend(`<tr data-food-id=${food.id}><td class='food-cell' >${food.name}</td><td class='calorie-cell'>${food.calories}</td><td><button data-food-id=${food.id} class='remove btn red darken-3'>-</button></td></tr>`);
+	    });
+	  }
+	}
+
+	module.exports = new FoodTable();
+
+/***/ }),
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	const API = 'https://qs-be.herokuapp.com/api/v1/';
