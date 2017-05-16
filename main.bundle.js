@@ -58,11 +58,62 @@
 
 	const Food = class Food {
 
+	  constructor() {
+	    this.getAll();
+
+	    $('.foods').on('click', '.remove', event => {
+	      this.remove();
+	    });
+
+	    $('.foods').on('click', '.food-cell', event => {
+	      const cellValue = $(event.target).text();
+	      const td = event.target;
+	      $(td).html($('<input />', { 'value': cellValue }).val(cellValue).attr('id', cellValue));
+
+	      const cell = $(td).children()[0];
+
+	      cell.focus();
+
+	      $('table').on('focusout', cell, event => {
+	        this.editName();
+	      });
+
+	      $(cell).keypress(event => {
+	        if (event.which == 13) {
+	          this.editName();
+	        }
+	      });
+	    });
+
+	    $('.foods').on('click', '.calorie-cell', event => {
+	      const cellValue = $(event.target).text();
+	      $(event.target).html($('<input />', { 'value': cellValue }).val(cellValue).attr('id', cellValue));
+
+	      $(`#${cellValue}`).focus();
+
+	      $('table').on('focusout', `#${cellValue}`, event => {
+	        this.editCalories();
+	      });
+
+	      $(`#${cellValue}`).keypress(event => {
+	        if (event.which == 13) {
+	          this.editCalories();
+	        }
+	      });
+	    });
+
+	    $('#new-food').submit(event => this.addFood());
+
+	    $('form').on('submit', event => event.preventDefault());
+	  }
+
 	  getAll() {
 	    return $.ajax({
 	      method: 'GET',
 	      url: API + 'foods'
-	    }).done(makeFoodTable).fail(error => {
+	    }).then(data => {
+	      this.makeFoodTable(data);
+	    }).fail(error => {
 	      console.error(error);
 	    });
 	  }
@@ -74,7 +125,7 @@
 	    return $.ajax({
 	      url: API + `foods/${id}`,
 	      method: 'DELETE'
-	    }).done(removeFromFoodTable(button)).fail(error => {
+	    }).done(this.removeFromFoodTable(button)).fail(error => {
 	      console.error(error);
 	    });
 	  }
@@ -88,18 +139,20 @@
 	    $('.name-error').empty().remove();
 
 	    if (newFood.name == "" && newFood.calories == "") {
-	      caloriesError();
-	      nameError();
+	      this.caloriesError();
+	      this.nameError();
 	    } else if (newFood.calories == "") {
-	      caloriesError();
+	      this.caloriesError();
 	    } else if (newFood.name == "") {
-	      nameError();
+	      this.nameError();
 	    } else {
 	      return $.ajax({
 	        url: API + 'foods',
 	        method: 'POST',
 	        data: newFood
-	      }).done(addToFoodTable).fail(error => {
+	      }).then(data => {
+	        this.addToFoodTable(data);
+	      }).fail(error => {
 	        console.error(error);
 	      });
 	    };
@@ -116,7 +169,7 @@
 	      method: 'PATCH',
 	      data: toEdit
 	    }).then(data => {
-	      updateCellName(data, tr);
+	      this.updateCellName(data, tr);
 	    }).fail(error => {
 	      console.error(error);
 	    });
@@ -127,121 +180,77 @@
 
 	    const tr = $(event.target).parent().parent();
 	    const id = tr.data('food-id');
-	    // console.log(tr)
 
 	    $.ajax({
 	      url: API + `foods/${id}`,
 	      method: 'PATCH',
 	      data: toEdit
 	    }).then(data => {
-	      updateCellCalories(data, tr);
+	      this.updateCellCalories(data, tr);
 	    }).fail(error => {
 	      console.error(error);
 	    });
 	  }
+
+	  makeFoodTable(data) {
+	    data.forEach(food => {
+	      $('.foods tbody').prepend(`<tr data-food-id=${food.id}><td class='food-cell' >${food.name}</td><td class='calorie-cell'>${food.calories}</td><td><button data-food-id=${food.id} class='remove btn red darken-3'>-</button></td></tr>`);
+	    });
+	  }
+
+	  removeFromFoodTable(button) {
+	    $(button).parent().parent().empty().remove();
+	  }
+
+	  addToFoodTable(data) {
+	    const food = data[0];
+	    $(`<tr data-food-id=${food.id}><td class='food-cell'>${food.name}</td><td class='calorie-cell'>${food.calories}</td><td><button data-food-id=${food.id} class='remove btn red darken-3'>-</button></td></tr>`).prependTo('.foods tbody');
+	    $('.calorie-error').empty().remove();
+	    $('.name-error').empty().remove();
+	    $('input[name=food-name]').val('');
+	    $('input[name=food-calories]').val('');
+	  }
+
+	  searchFoods() {
+	    let searchName = $('#food-filter').val();
+	    $('.foods tbody').html('');
+	    return $.ajax({
+	      url: `${API}search?searchName=${searchName}`,
+	      method: 'GET'
+	    }).then(data => {
+	      this.makeFoodTable(data);
+	    }).fail(error => {
+	      console.error(error);
+	    });
+	  }
+	  caloriesError() {
+	    $('.calorie-error').empty().remove();
+	    $('#calorie-field').parent().after(`<div class='calorie-error'>Please enter a calorie amount</div>`);
+	  }
+	  nameError() {
+	    $('.name-error').empty().remove();
+	    $('#name-field').parent().after(`<div class='name-error'>Please enter a food name
+	    </divl>`);
+	  }
+	  updateCellName(data, tr) {
+	    const td = $(tr).children()[0];
+	    $(td).children()[0].remove();
+	    $(td).text(data[0].name);
+	  }
+
+	  updateCellCalories(data, tr) {
+	    const td = $(tr).children()[1];
+	    $(td).children()[0].remove();
+	    $(td).text(data[0].calories);
+	  }
 	};
 
-	function makeFoodTable(data) {
-	  data.forEach(food => {
-	    $('.foods tbody').prepend(`<tr data-food-id=${food.id}><td class='food-cell' >${food.name}</td><td class='calorie-cell'>${food.calories}</td><td><button data-food-id=${food.id} class='remove btn red darken-3'>-</button></td></tr>`);
-	  });
-	}
-
-	function addToFoodTable(data) {
-	  const food = data[0];
-	  $(`<tr data-food-id=${food.id}><td class='food-cell'>${food.name}</td><td class='calorie-cell'>${food.calories}</td><td><button data-food-id=${food.id} class='remove btn red darken-3'>-</button></td></tr>`).prependTo('.foods tbody');
-	  $('.calorie-error').empty().remove();
-	  $('.name-error').empty().remove();
-	  $('input[name=food-name]').val('');
-	  $('input[name=food-calories]').val('');
-	}
-
-	function removeFromFoodTable(button) {
-	  $(button).parent().parent().empty().remove();
-	}
-
-	function caloriesError() {
-	  $('.calorie-error').empty().remove();
-	  $('#calorie-field').parent().after(`<div class='calorie-error'>Please enter a calorie amount</div>`);
-	}
-	function nameError() {
-	  $('.name-error').empty().remove();
-	  $('#name-field').parent().after(`<div class='name-error'>Please enter a food name
-	</divl>`);
-	}
-
-	function updateCellName(data, tr) {
-	  const td = $(tr).children()[0];
-	  $(td).children()[0].remove();
-	  $(td).text(data[0].name);
-	}
-
-	function updateCellCalories(data, tr) {
-	  const td = $(tr).children()[1];
-	  $(td).children()[0].remove();
-	  $(td).text(data[0].calories);
-	}
-
-	function searchFoods() {
-	  let searchName = $('#food-filter').val();
-	  $('.foods tbody').html('');
-	  return $.ajax({
-	    url: `${API}search?searchName=${searchName}`,
-	    method: 'GET'
-	  }).done(makeFoodTable).fail(error => {
-	    console.error(error);
-	  });
-	}
-
-	$('#food-filter').on('input', function () {
-	  searchFoods();
-	});
 	$(document).ready(function () {
 	  const food = new Food();
-	  food.getAll();
 
-	  $('.foods').on('click', '.remove', event => {
-	    food.remove();
+	  $('#food-filter').on('input', function () {
+	    food.searchFoods();
 	  });
-
-	  $('.foods').on('click', '.food-cell', event => {
-	    const cellValue = $(event.target).text();
-	    const td = event.target;
-	    $(td).html($('<input />', { 'value': cellValue }).val(cellValue).attr('id', cellValue));
-
-	    const cell = $(td).children()[0];
-
-	    cell.focus();
-
-	    $('table').on('focusout', cell, event => {
-	      food.editName();
-	    });
-
-	    $(cell).keypress(event => {
-	      if (event.which == 13) {
-	        food.editName();
-	      }
-	    });
-	  });
-
-	  $('.foods').on('click', '.calorie-cell', event => {
-	    const cellValue = $(event.target).text();
-	    $(event.target).html($('<input />', { 'value': cellValue }).val(cellValue).attr('id', cellValue));
-
-	    $(`#${cellValue}`).focus();
-
-	    $('table').on('focusout', `#${cellValue}`, event => {
-	      food.editCalories();
-	    });
-
-	    $(`#${cellValue}`).keypress(event => {
-	      if (event.which == 13) {
-	        food.editCalories();
-	      }
-	    });
-	  });
-
-	  $('#new-food').submit(event => food.addFood());
 
 	  $('form').on('submit', event => event.preventDefault());
 	});
