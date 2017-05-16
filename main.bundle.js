@@ -58,11 +58,62 @@
 
 	const Food = class Food {
 
+	  constructor() {
+	    this.getAll();
+
+	    $('.foods').on('click', '.remove', event => {
+	      this.remove();
+	    });
+
+	    $('.foods').on('click', '.food-cell', event => {
+	      const cellValue = $(event.target).text();
+	      const td = event.target;
+	      $(td).html($('<input />', { 'value': cellValue }).val(cellValue).attr('id', cellValue));
+
+	      const cell = $(td).children()[0];
+
+	      cell.focus();
+
+	      $('table').on('focusout', cell, event => {
+	        this.editName();
+	      });
+
+	      $(cell).keypress(event => {
+	        if (event.which == 13) {
+	          this.editName();
+	        }
+	      });
+	    });
+
+	    $('.foods').on('click', '.calorie-cell', event => {
+	      const cellValue = $(event.target).text();
+	      $(event.target).html($('<input />', { 'value': cellValue }).val(cellValue).attr('id', cellValue));
+
+	      $(`#${cellValue}`).focus();
+
+	      $('table').on('focusout', `#${cellValue}`, event => {
+	        this.editCalories();
+	      });
+
+	      $(`#${cellValue}`).keypress(event => {
+	        if (event.which == 13) {
+	          this.editCalories();
+	        }
+	      });
+	    });
+
+	    $('#new-food').submit(event => this.addFood());
+
+	    $('form').on('submit', event => event.preventDefault());
+	  }
+
 	  getAll() {
 	    return $.ajax({
 	      method: 'GET',
 	      url: API + 'foods'
-	    }).done(makeFoodTable).fail(error => {
+	    }).then(data => {
+	      this.makeFoodTable(data);
+	    }).fail(error => {
 	      console.error(error);
 	    });
 	  }
@@ -74,7 +125,7 @@
 	    return $.ajax({
 	      url: API + `foods/${id}`,
 	      method: 'DELETE'
-	    }).done(removeFromFoodTable(button)).fail(error => {
+	    }).done(this.removeFromFoodTable(button)).fail(error => {
 	      console.error(error);
 	    });
 	  }
@@ -88,18 +139,20 @@
 	    $('.name-error').empty().remove();
 
 	    if (newFood.name == "" && newFood.calories == "") {
-	      caloriesError();
-	      nameError();
+	      this.caloriesError();
+	      this.nameError();
 	    } else if (newFood.calories == "") {
-	      caloriesError();
+	      this.caloriesError();
 	    } else if (newFood.name == "") {
-	      nameError();
+	      this.nameError();
 	    } else {
 	      return $.ajax({
 	        url: API + 'foods',
 	        method: 'POST',
 	        data: newFood
-	      }).done(addToFoodTable).fail(error => {
+	      }).then(data => {
+	        this.addToFoodTable(data);
+	      }).fail(error => {
 	        console.error(error);
 	      });
 	    };
@@ -116,7 +169,7 @@
 	      method: 'PATCH',
 	      data: toEdit
 	    }).then(data => {
-	      updateCellName(data, tr);
+	      this.updateCellName(data, tr);
 	    }).fail(error => {
 	      console.error(error);
 	    });
@@ -127,121 +180,77 @@
 
 	    const tr = $(event.target).parent().parent();
 	    const id = tr.data('food-id');
-	    // console.log(tr)
 
 	    $.ajax({
 	      url: API + `foods/${id}`,
 	      method: 'PATCH',
 	      data: toEdit
 	    }).then(data => {
-	      updateCellCalories(data, tr);
+	      this.updateCellCalories(data, tr);
 	    }).fail(error => {
 	      console.error(error);
 	    });
 	  }
+
+	  makeFoodTable(data) {
+	    data.forEach(food => {
+	      $('.foods tbody').prepend(`<tr data-food-id=${food.id}><td class='food-cell' >${food.name}</td><td class='calorie-cell'>${food.calories}</td><td><button data-food-id=${food.id} class='remove btn red darken-3'>-</button></td></tr>`);
+	    });
+	  }
+
+	  removeFromFoodTable(button) {
+	    $(button).parent().parent().empty().remove();
+	  }
+
+	  addToFoodTable(data) {
+	    const food = data[0];
+	    $(`<tr data-food-id=${food.id}><td class='food-cell'>${food.name}</td><td class='calorie-cell'>${food.calories}</td><td><button data-food-id=${food.id} class='remove btn red darken-3'>-</button></td></tr>`).prependTo('.foods tbody');
+	    $('.calorie-error').empty().remove();
+	    $('.name-error').empty().remove();
+	    $('input[name=food-name]').val('');
+	    $('input[name=food-calories]').val('');
+	  }
+
+	  searchFoods() {
+	    let searchName = $('#food-filter').val();
+	    $('.foods tbody').html('');
+	    return $.ajax({
+	      url: `${API}search?searchName=${searchName}`,
+	      method: 'GET'
+	    }).then(data => {
+	      this.makeFoodTable(data);
+	    }).fail(error => {
+	      console.error(error);
+	    });
+	  }
+	  caloriesError() {
+	    $('.calorie-error').empty().remove();
+	    $('#calorie-field').parent().after(`<div class='calorie-error'>Please enter a calorie amount</div>`);
+	  }
+	  nameError() {
+	    $('.name-error').empty().remove();
+	    $('#name-field').parent().after(`<div class='name-error'>Please enter a food name
+	    </divl>`);
+	  }
+	  updateCellName(data, tr) {
+	    const td = $(tr).children()[0];
+	    $(td).children()[0].remove();
+	    $(td).text(data[0].name);
+	  }
+
+	  updateCellCalories(data, tr) {
+	    const td = $(tr).children()[1];
+	    $(td).children()[0].remove();
+	    $(td).text(data[0].calories);
+	  }
 	};
 
-	function makeFoodTable(data) {
-	  data.forEach(food => {
-	    $('.foods tbody').prepend(`<tr data-food-id=${food.id}><td class='food-cell' >${food.name}</td><td class='calorie-cell'>${food.calories}</td><td><button data-food-id=${food.id} class='remove btn red darken-3'>-</button></td></tr>`);
-	  });
-	}
-
-	function addToFoodTable(data) {
-	  const food = data[0];
-	  $(`<tr data-food-id=${food.id}><td class='food-cell'>${food.name}</td><td class='calorie-cell'>${food.calories}</td><td><button data-food-id=${food.id} class='remove btn red darken-3'>-</button></td></tr>`).prependTo('.foods tbody');
-	  $('.calorie-error').empty().remove();
-	  $('.name-error').empty().remove();
-	  $('input[name=food-name]').val('');
-	  $('input[name=food-calories]').val('');
-	}
-
-	function removeFromFoodTable(button) {
-	  $(button).parent().parent().empty().remove();
-	}
-
-	function caloriesError() {
-	  $('.calorie-error').empty().remove();
-	  $('#calorie-field').parent().after(`<div class='calorie-error'>Please enter a calorie amount</div>`);
-	}
-	function nameError() {
-	  $('.name-error').empty().remove();
-	  $('#name-field').parent().after(`<div class='name-error'>Please enter a food name
-	</divl>`);
-	}
-
-	function updateCellName(data, tr) {
-	  const td = $(tr).children()[0];
-	  $(td).children()[0].remove();
-	  $(td).text(data[0].name);
-	}
-
-	function updateCellCalories(data, tr) {
-	  const td = $(tr).children()[1];
-	  $(td).children()[0].remove();
-	  $(td).text(data[0].calories);
-	}
-
-	function searchFoods() {
-	  let searchName = $('#food-filter').val();
-	  $('.foods tbody').html('');
-	  return $.ajax({
-	    url: `${API}search?searchName=${searchName}`,
-	    method: 'GET'
-	  }).done(makeFoodTable).fail(error => {
-	    console.error(error);
-	  });
-	}
-
-	$('#food-filter').on('input', function () {
-	  searchFoods();
-	});
 	$(document).ready(function () {
 	  const food = new Food();
-	  food.getAll();
 
-	  $('.foods').on('click', '.remove', event => {
-	    food.remove();
+	  $('#food-filter').on('input', function () {
+	    food.searchFoods();
 	  });
-
-	  $('.foods').on('click', '.food-cell', event => {
-	    const cellValue = $(event.target).text();
-	    const td = event.target;
-	    $(td).html($('<input />', { 'value': cellValue }).val(cellValue).attr('id', cellValue));
-
-	    const cell = $(td).children()[0];
-
-	    cell.focus();
-
-	    $('table').on('focusout', cell, event => {
-	      food.editName();
-	    });
-
-	    $(cell).keypress(event => {
-	      if (event.which == 13) {
-	        food.editName();
-	      }
-	    });
-	  });
-
-	  $('.foods').on('click', '.calorie-cell', event => {
-	    const cellValue = $(event.target).text();
-	    $(event.target).html($('<input />', { 'value': cellValue }).val(cellValue).attr('id', cellValue));
-
-	    $(`#${cellValue}`).focus();
-
-	    $('table').on('focusout', `#${cellValue}`, event => {
-	      food.editCalories();
-	    });
-
-	    $(`#${cellValue}`).keypress(event => {
-	      if (event.which == 13) {
-	        food.editCalories();
-	      }
-	    });
-	  });
-
-	  $('#new-food').submit(event => food.addFood());
 
 	  $('form').on('submit', event => event.preventDefault());
 	});
@@ -10514,6 +10523,8 @@
 	$ = __webpack_require__(2);
 
 	const mealNames = ["Breakfast", "Lunch", "Dinner", "Snacks"];
+	let counter = 0;
+
 	const Diary = class Diary {
 
 	  getDiary() {
@@ -10568,7 +10579,90 @@
 	      });
 	    });
 	  }
+
+	  getPrevious() {
+	    let todaysDate = new Date();
+	    todaysDate.setDate(todaysDate.getDate() + counter);
+
+	    let formattedDate = todaysDate;
+	    let diaryDay = formattedDate.getDate();
+	    let diaryMonth = formattedDate.getMonth() + 1;
+	    let diaryYear = formattedDate.getFullYear();
+
+	    formattedDate = `${diaryYear}-0${diaryMonth}-0${diaryDay}`;
+	    todaysDate = todaysDate.toDateString().slice(4);
+	    const dateObject = { date: formattedDate };
+	    const date = `<div class='row'><div class='col s6 offset-s3' id='date-box'><button class='btn' id='prev-page-btn'><</button><h3 id='date-display'>${todaysDate}</h3><button class='btn' id='next-page-btn'>></button></div></div>`;
+
+	    $('#Lunch-body').empty();
+	    $('#Dinner-body').empty();
+	    $('#Snacks-body').empty();
+	    $('#Breakfast-body').empty();
+
+	    resetCalories();
+
+	    $('#date-container').empty();
+	    $('#date-container').append(date);
+
+	    return $.ajax({
+	      url: API + 'diaries/meals',
+	      method: 'GET',
+	      data: dateObject
+	    }).done(populateMealsTables).fail(error => {
+	      console.error(error);
+	    });
+	  }
+
+	  getNext() {
+	    let todaysDate = new Date();
+	    todaysDate.setDate(todaysDate.getDate() + counter);
+
+	    let formattedDate = todaysDate;
+	    let diaryDay = formattedDate.getDate();
+	    let diaryMonth = formattedDate.getMonth() + 1;
+	    let diaryYear = formattedDate.getFullYear();
+
+	    formattedDate = `${diaryYear}-0${diaryMonth}-0${diaryDay}`;
+	    todaysDate = todaysDate.toDateString().slice(4);
+	    const dateObject = { date: formattedDate };
+	    const date = `<div class='row'><div class='col s6 offset-s3' id='date-box'><button class='btn' id='prev-page-btn'><</button><h3 id='date-display' class='center'>${todaysDate}</h3><button class='btn' id='next-page-btn'>></button></div></div>`;
+
+	    $('#Lunch-body').empty();
+	    $('#Dinner-body').empty();
+	    $('#Snacks-body').empty();
+	    $('#Breakfast-body').empty();
+
+	    resetCalories();
+
+	    $('#date-container').empty();
+	    $('#date-container').append(date);
+
+	    return $.ajax({
+	      url: API + 'diaries/meals',
+	      method: 'GET',
+	      data: dateObject
+	    }).done(populateMealsTables).fail(error => {
+	      console.error(error);
+	    });
+	  }
 	};
+
+	function resetCalories() {
+	  $('#Breakfast-total-calories').text(0);
+	  $('#Breakfast-remaining-calories').css('color', 'green').text(400);
+
+	  $('#Dinner-total-calories').text(0);
+	  $('#Dinner-remaining-calories').css('color', 'green').text(800);
+
+	  $('#Lunch-total-calories').text(0);
+	  $('#Lunch-remaining-calories').css('color', 'green').text(600);
+
+	  $('#Snacks-total-calories').text(0);
+	  $('#Snacks-remaining-calories').css('color', 'green').text(200);
+
+	  $('#consumed-calories').text(0);
+	  $('#remaining-calories').css('color', 'green').text(2000);
+	}
 
 	function makeFoodTable(data) {
 	  data.forEach(food => {
@@ -10582,18 +10676,21 @@
 	  $(`#${mealName}-remaining-calories`).text(updatedValue);
 	  if (updatedValue < 0) {
 	    $(`#${mealName}-remaining-calories`).css('color', 'red');
-	  } else if (updatedValue > 0) {
+	  } else if (updatedValue >= 0) {
 	    $(`#${mealName}-remaining-calories`).css('color', 'green');
 	  }
 	}
 
 	function addFoodstoMealTable(meal, mealName) {
-	  meal.foods.forEach(food => {
-	    $(`#${mealName}-body`).prepend(`<tr><td >${food.name}</td><td id='${mealName}-calories'>${food.calories}</td><td></td></tr>`);
-	    updateMealTotalCalories(mealName, food);
-	    updateMealRemainingCalories(mealName, food);
-	  });
-	  updateConsumedCalories();
+
+	  if (Array.isArray(meal.foods)) {
+	    meal.foods.forEach(food => {
+	      $(`#${mealName}-body`).prepend(`<tr><td >${food.name}</td><td id='${mealName}-calories'>${food.calories}</td><td><button data-meal-id=${food.meal_id} class='remove btn red darken-3'>-</button></td></tr>`);
+	      updateMealTotalCalories(mealName, food);
+	      updateMealRemainingCalories(mealName, food);
+	    });
+	    updateConsumedCalories();
+	  }
 	}
 
 	function updateConsumedCalories() {
@@ -10609,13 +10706,23 @@
 	function updateRemainingCalories() {
 	  let consumedCalories = parseInt($('#consumed-calories').text());
 	  $('#remaining-calories').text(`${2000 - consumedCalories}`);
+	  if (2000 - consumedCalories < 0) {
+	    $('#remaining-calories').css('color', 'red');
+	  } else if (2000 - consumedCalories >= 0) {
+	    $('#remaining-calories').css('color', 'green');
+	  }
 	}
 	function populateMealsTables(data) {
-	  $('#date-box').attr('data-diary-id', `${data[0].diary_id}`);
-	  data.forEach(meal => {
-	    let mealName = meal.name;
-	    addFoodstoMealTable(meal, mealName);
-	  });
+	  resetCalories();
+	  if (Array.isArray(data)) {
+	    $('#date-box').attr('data-diary-id', `${data[0].diary_id}`);
+	    data.forEach(meal => {
+	      let mealName = meal.name;
+	      addFoodstoMealTable(meal, mealName);
+	    });
+	  } else {
+	    $('#date-box').attr('data-diary-id', `${data.id}`);
+	  }
 	}
 
 	function updateMealTotalCalories(mealName, food) {
@@ -10626,21 +10733,22 @@
 
 	function grabFood(data) {
 	  const mealName = data.name;
+	  let meal_id = data.id;
 	  $.ajax({
 	    url: API + `foods/${data.food_id}`,
 	    method: 'GET'
 	  }).then(data => {
-	    addFoodToMeal(data, mealName);
+	    addFoodToMeal(data, mealName, meal_id);
 	  }).fail(error => {
 	    console.error(error);
 	  });
 	}
 
-	function addFoodToMeal(data, mealName) {
+	function addFoodToMeal(data, mealName, meal_id) {
 	  $(`#${data.id}`).prop('checked', false);
 	  const label = $(`#${data.id}`).next();
 	  $(label).prop('checked', false);
-	  $(`#${mealName}-body`).prepend(`<tr><td >${data.name}</td><td id='${mealName}-calories'>${data.calories}</td><td></td></tr>`);
+	  $(`#${mealName}-body`).prepend(`<tr><td >${data.name}</td><td id='${mealName}-calories'>${data.calories}</td><td><button data-meal-id=${meal_id} class='remove btn red darken-3'>-</button></td></tr>`);
 	  updateMealTotalCalories(mealName, data);
 	  updateMealRemainingCalories(mealName, data);
 	  updateRemainingCalories();
@@ -10658,12 +10766,34 @@
 	  });
 	}
 
-	$('#food-filter').on('input', function () {
-	  searchFoods();
-	});
+	function removeFoodFromMealTable(button) {
+	  let mealName = $(button).offsetParent().find('span').text();
+	  let calories = -parseInt($(button).parent().prev().text());
+	  $(button).parent().parent().remove();
+	  console.log(mealName);
+	  updateMealTotalCalories(mealName, { calories: calories });
+	  updateMealRemainingCalories(mealName, { calories: calories });
+	  updateRemainingCalories();
+	  updateConsumedCalories();
+	}
 
+	function removeFoodFromMeal() {
+	  const button = event.target;
+	  const id = $(button).data("meal-id");
+
+	  return $.ajax({
+	    url: `${API}meals/${id}`,
+	    method: 'DELETE'
+	  }).done(removeFoodFromMealTable(button)).fail(error => {
+	    console.error(error);
+	  });
+	}
 	$(document).ready(function () {
 	  const diary = new Diary();
+
+	  $('#food-filter').on('input', function () {
+	    searchFoods();
+	  });
 
 	  diary.getFoods();
 
@@ -10681,6 +10811,19 @@
 	  $('#Snacks').on('click', event => {
 	    diary.addMeal();
 	  });
+	  $('body').on('click', '.remove', event => {
+	    removeFoodFromMeal();
+	  });
+	  $('body').on('click', '#prev-page-btn', event => {
+	    counter = counter - 1;
+	    diary.getPrevious();
+	  });
+
+	  $('body').on('click', '#next-page-btn', event => {
+	    counter = counter + 1;
+	    diary.getNext();
+	  });
+
 	  $('form').on('submit', event => event.preventDefault());
 	});
 
