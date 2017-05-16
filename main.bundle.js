@@ -10616,7 +10616,7 @@
 	    formattedDate = `${diaryYear}-0${diaryMonth}-0${diaryDay}`;
 	    todaysDate = todaysDate.toDateString().slice(4);
 	    const dateObject = { date: formattedDate };
-	    const date = `<div class='row'><div class='col s6 offset-s3' id='date-box'><button class='btn' id='prev-page-btn'><</button><h3 id='date-display'>${todaysDate}</h3><button class='btn' id='next-page-btn'>></button></div></div>`;
+	    const date = `<div class='row'><div class='col s6 offset-s3' id='date-box'><button class='btn' id='prev-page-btn'><</button><h3 id='date-display' class='center'>${todaysDate}</h3><button class='btn' id='next-page-btn'>></button></div></div>`;
 
 	    $('#Lunch-body').empty();
 	    $('#Dinner-body').empty();
@@ -10667,7 +10667,7 @@
 	  $(`#${mealName}-remaining-calories`).text(updatedValue);
 	  if (updatedValue < 0) {
 	    $(`#${mealName}-remaining-calories`).css('color', 'red');
-	  } else if (updatedValue > 0) {
+	  } else if (updatedValue >= 0) {
 	    $(`#${mealName}-remaining-calories`).css('color', 'green');
 	  }
 	}
@@ -10699,11 +10699,12 @@
 	  $('#remaining-calories').text(`${2000 - consumedCalories}`);
 	  if (2000 - consumedCalories < 0) {
 	    $('#remaining-calories').css('color', 'red');
-	  } else {
+	  } else if (2000 - consumedCalories >= 0) {
 	    $('#remaining-calories').css('color', 'green');
 	  }
 	}
 	function populateMealsTables(data) {
+	  resetCalories();
 	  if (Array.isArray(data)) {
 	    $('#date-box').attr('data-diary-id', `${data[0].diary_id}`);
 	    data.forEach(meal => {
@@ -10756,10 +10757,6 @@
 	  });
 	}
 
-	$('#food-filter').on('input', function () {
-	  searchFoods();
-	});
-
 	function removeFoodFromMealTable(button) {
 	  let mealName = $(button).offsetParent().find('span').text();
 	  let calories = -parseInt($(button).parent().prev().text());
@@ -10784,6 +10781,10 @@
 	}
 	$(document).ready(function () {
 	  const diary = new Diary();
+
+	  $('#food-filter').on('input', function () {
+	    searchFoods();
+	  });
 
 	  diary.getFoods();
 
