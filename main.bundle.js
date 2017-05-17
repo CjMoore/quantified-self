@@ -10582,13 +10582,32 @@
 
 	const API = 'https://qs-be.herokuapp.com/api/v1/';
 	const LOCAL = 'http://localhost:3000/api/v1/';
-	$ = __webpack_require__(2);
+	const diaryFoodTable = __webpack_require__(9);
+	const calories = __webpack_require__(10);
+	const foodAdder = __webpack_require__(11);
+	const $ = __webpack_require__(2);
+	__webpack_require__(12);
+	__webpack_require__(13);
 
-	const mealNames = ["Breakfast", "Lunch", "Dinner", "Snacks"];
 	let counter = 0;
 
-	const Diary = class Diary {
+	class Diary {
+	  constructor() {
+	    this.getDiary();
+	    this.diaryListeners();
+	    diaryFoodTable.getFoods();
+	  }
+	  diaryListeners() {
+	    $('body').on('click', '#prev-page-btn', event => {
+	      counter = counter - 1;
+	      this.getPrevious();
+	    });
 
+	    $('body').on('click', '#next-page-btn', event => {
+	      counter = counter + 1;
+	      this.getNext();
+	    });
+	  }
 	  getDiary() {
 	    let todaysDate = new Date();
 	    let formattedDate = todaysDate;
@@ -10607,38 +10626,10 @@
 	      url: API + 'diaries/meals',
 	      method: 'GET',
 	      data: dateObject
-	    }).done(populateMealsTables).fail(error => {
+	    }).then(data => {
+	      this.populateMealsTables(data);
+	    }).fail(error => {
 	      console.error(error);
-	    });
-	  }
-
-	  getFoods() {
-	    return $.ajax({
-	      method: 'GET',
-	      url: API + 'foods'
-	    }).done(makeFoodTable).fail(error => {
-	      console.error(error);
-	    });
-	  }
-
-	  addMeal() {
-	    const card = $(event.target).parent();
-	    const table = card.children()[12];
-	    const checked = $('#diary-foods-body input:checked');
-	    const diaryId = $('#date-box').data('diary-id');
-	    const meal = event.target.id;
-
-	    $(checked).each((i, obj) => {
-	      const newMeal = { name: meal, diaryId: diaryId, foodId: obj.id };
-	      $.ajax({
-	        url: API + 'meals',
-	        method: 'POST',
-	        data: newMeal
-	      }).then(data => {
-	        grabFood(data);
-	      }).fail(error => {
-	        console.error(error);
-	      });
 	    });
 	  }
 
@@ -10661,7 +10652,7 @@
 	    $('#Snacks-body').empty();
 	    $('#Breakfast-body').empty();
 
-	    resetCalories();
+	    calories.resetCalories();
 
 	    $('#date-container').empty();
 	    $('#date-container').append(date);
@@ -10670,7 +10661,9 @@
 	      url: API + 'diaries/meals',
 	      method: 'GET',
 	      data: dateObject
-	    }).done(populateMealsTables).fail(error => {
+	    }).then(data => {
+	      this.populateMealsTables(data);
+	    }).fail(error => {
 	      console.error(error);
 	    });
 	  }
@@ -10694,7 +10687,7 @@
 	    $('#Snacks-body').empty();
 	    $('#Breakfast-body').empty();
 
-	    resetCalories();
+	    calories.resetCalories();
 
 	    $('#date-container').empty();
 	    $('#date-container').append(date);
@@ -10703,11 +10696,83 @@
 	      url: API + 'diaries/meals',
 	      method: 'GET',
 	      data: dateObject
-	    }).done(populateMealsTables).fail(error => {
+	    }).then(data => {
+	      this.populateMealsTables(data);
+	    }).fail(error => {
 	      console.error(error);
 	    });
 	  }
-	};
+
+	  populateMealsTables(data) {
+	    calories.resetCalories();
+	    if (Array.isArray(data)) {
+	      $('#date-box').attr('data-diary-id', `${data[0].diary_id}`);
+	      data.forEach(meal => {
+	        let mealName = meal.name;
+	        foodAdder.addFoodstoMealTable(meal, mealName);
+	      });
+	    } else {
+	      $('#date-box').attr('data-diary-id', `${data.id}`);
+	    }
+	  }
+	}
+
+	$(document).ready(function () {
+	  const diary = new Diary();
+
+	  $('form').on('submit', event => event.preventDefault());
+	});
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	const API = 'https://qs-be.herokuapp.com/api/v1/';
+	const LOCAL = 'http://localhost:3000/api/v1/';
+	const $ = __webpack_require__(2);
+
+	function getFoods() {
+	  return $.ajax({
+	    method: 'GET',
+	    url: API + 'foods'
+	  }).then(data => {
+	    makeFoodTable(data);
+	  }).fail(error => {
+	    console.error(error);
+	  });
+	}
+
+	function makeFoodTable(data) {
+	  data.forEach(food => {
+	    $('#diary-foods-body').prepend(`<tr data-food-id=${food.id}><td class='food-cell' >${food.name}</td><td class='calorie-cell'>${food.calories}</td><td><input type="checkbox" id="${food.id}" data-food-name="${food.name}"/><label for="${food.id}"></label></td></tr>`);
+	  });
+	}
+
+	module.exports = { getFoods: getFoods, makeFoodTable: makeFoodTable };
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	const mealNames = ["Breakfast", "Lunch", "Dinner", "Snacks"];
+	const $ = __webpack_require__(2);
+
+	function updateMealRemainingCalories(mealName, food) {
+	  let currentValue = parseInt($(`#${mealName}-remaining-calories`).text());
+	  let updatedValue = currentValue - food.calories;
+	  $(`#${mealName}-remaining-calories`).text(updatedValue);
+	  if (updatedValue < 0) {
+	    $(`#${mealName}-remaining-calories`).css('color', 'red');
+	  } else if (updatedValue >= 0) {
+	    $(`#${mealName}-remaining-calories`).css('color', 'green');
+	  }
+	}
+
+	function updateMealTotalCalories(mealName, food) {
+	  let currentValue = parseInt($(`#${mealName}-total-calories`).text());
+	  let updatedValue = currentValue + food.calories;
+	  $(`#${mealName}-total-calories`).text(updatedValue);
+	}
 
 	function resetCalories() {
 	  $('#Breakfast-total-calories').text(0);
@@ -10724,35 +10789,6 @@
 
 	  $('#consumed-calories').text(0);
 	  $('#remaining-calories').css('color', 'green').text(2000);
-	}
-
-	function makeFoodTable(data) {
-	  data.forEach(food => {
-	    $('#diary-foods-body').prepend(`<tr data-food-id=${food.id}><td class='food-cell' >${food.name}</td><td class='calorie-cell'>${food.calories}</td><td><input type="checkbox" id="${food.id}" data-food-name="${food.name}"/><label for="${food.id}"></label></td></tr>`);
-	  });
-	}
-
-	function updateMealRemainingCalories(mealName, food) {
-	  let currentValue = parseInt($(`#${mealName}-remaining-calories`).text());
-	  let updatedValue = currentValue - food.calories;
-	  $(`#${mealName}-remaining-calories`).text(updatedValue);
-	  if (updatedValue < 0) {
-	    $(`#${mealName}-remaining-calories`).css('color', 'red');
-	  } else if (updatedValue >= 0) {
-	    $(`#${mealName}-remaining-calories`).css('color', 'green');
-	  }
-	}
-
-	function addFoodstoMealTable(meal, mealName) {
-
-	  if (Array.isArray(meal.foods)) {
-	    meal.foods.forEach(food => {
-	      $(`#${mealName}-body`).prepend(`<tr><td >${food.name}</td><td id='${mealName}-calories'>${food.calories}</td><td><button data-meal-id=${food.meal_id} class='remove btn red darken-3'>-</button></td></tr>`);
-	      updateMealTotalCalories(mealName, food);
-	      updateMealRemainingCalories(mealName, food);
-	    });
-	    updateConsumedCalories();
-	  }
 	}
 
 	function updateConsumedCalories() {
@@ -10774,23 +10810,41 @@
 	    $('#remaining-calories').css('color', 'green');
 	  }
 	}
-	function populateMealsTables(data) {
-	  resetCalories();
-	  if (Array.isArray(data)) {
-	    $('#date-box').attr('data-diary-id', `${data[0].diary_id}`);
-	    data.forEach(meal => {
-	      let mealName = meal.name;
-	      addFoodstoMealTable(meal, mealName);
-	    });
-	  } else {
-	    $('#date-box').attr('data-diary-id', `${data.id}`);
-	  }
-	}
 
-	function updateMealTotalCalories(mealName, food) {
-	  let currentValue = parseInt($(`#${mealName}-total-calories`).text());
-	  let updatedValue = currentValue + food.calories;
-	  $(`#${mealName}-total-calories`).text(updatedValue);
+	module.exports = { updateMealRemainingCalories: updateMealRemainingCalories,
+	  updateMealTotalCalories: updateMealTotalCalories,
+	  resetCalories: resetCalories,
+	  updateConsumedCalories: updateConsumedCalories,
+	  updateRemainingCalories: updateRemainingCalories };
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	const API = 'https://qs-be.herokuapp.com/api/v1/';
+	const LOCAL = 'http://localhost:3000/api/v1/';
+	const $ = __webpack_require__(2);
+	const calories = __webpack_require__(10);
+
+	function addMeal() {
+	  const card = $(event.target).parent();
+	  const table = card.children()[12];
+	  const checked = $('#diary-foods-body input:checked');
+	  const diaryId = $('#date-box').data('diary-id');
+	  const meal = event.target.id;
+
+	  $(checked).each((i, obj) => {
+	    const newMeal = { name: meal, diaryId: diaryId, foodId: obj.id };
+	    $.ajax({
+	      url: API + 'meals',
+	      method: 'POST',
+	      data: newMeal
+	    }).then(data => {
+	      grabFood(data);
+	    }).fail(error => {
+	      console.error(error);
+	    });
+	  });
 	}
 
 	function grabFood(data) {
@@ -10806,37 +10860,68 @@
 	  });
 	}
 
+	function addFoodstoMealTable(meal, mealName) {
+	  if (Array.isArray(meal.foods)) {
+	    meal.foods.forEach(food => {
+	      $(`#${mealName}-body`).prepend(`<tr><td >${food.name}</td><td id='${mealName}-calories'>${food.calories}</td><td><button data-meal-id=${food.meal_id} class='remove btn red darken-3'>-</button></td></tr>`);
+	      calories.updateMealTotalCalories(mealName, food);
+	      calories.updateMealRemainingCalories(mealName, food);
+	    });
+	    calories.updateConsumedCalories();
+	  }
+	}
+
 	function addFoodToMeal(data, mealName, meal_id) {
 	  $(`#${data.id}`).prop('checked', false);
 	  const label = $(`#${data.id}`).next();
 	  $(label).prop('checked', false);
 	  $(`#${mealName}-body`).prepend(`<tr><td >${data.name}</td><td id='${mealName}-calories'>${data.calories}</td><td><button data-meal-id=${meal_id} class='remove btn red darken-3'>-</button></td></tr>`);
-	  updateMealTotalCalories(mealName, data);
-	  updateMealRemainingCalories(mealName, data);
-	  updateRemainingCalories();
-	  updateConsumedCalories();
+	  calories.updateMealTotalCalories(mealName, data);
+	  calories.updateMealRemainingCalories(mealName, data);
+	  calories.updateRemainingCalories();
+	  calories.updateConsumedCalories();
 	}
 
-	function searchFoods() {
-	  let searchName = $('#food-filter').val();
-	  $('#diary-foods-body').html('');
-	  return $.ajax({
-	    url: `${API}search?searchName=${searchName}`,
-	    method: 'GET'
-	  }).done(makeFoodTable).fail(error => {
-	    console.error(error);
+	$(document).ready(() => {
+
+	  $('#Breakfast').on('click', event => {
+	    addMeal();
 	  });
-	}
+	  $('#Lunch').on('click', event => {
+	    addMeal();
+	  });
+	  $('#Dinner').on('click', event => {
+	    addMeal();
+	  });
+	  $('#Snacks').on('click', event => {
+	    addMeal();
+	  });
+	  $('form').on('submit', event => event.preventDefault());
+	});
+
+	module.exports = { addMeal: addMeal,
+	  grabFood: grabFood,
+	  addFoodstoMealTable: addFoodstoMealTable,
+	  addFoodToMeal: addFoodToMeal };
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	const API = 'https://qs-be.herokuapp.com/api/v1/';
+	const LOCAL = 'http://localhost:3000/api/v1/';
+	const $ = __webpack_require__(2);
+	const calories = __webpack_require__(10);
 
 	function removeFoodFromMealTable(button) {
 	  let mealName = $(button).offsetParent().find('span').text();
-	  let calories = -parseInt($(button).parent().prev().text());
+	  let calorieUpdate = -parseInt($(button).parent().prev().text());
 	  $(button).parent().parent().remove();
-	  console.log(mealName);
-	  updateMealTotalCalories(mealName, { calories: calories });
-	  updateMealRemainingCalories(mealName, { calories: calories });
-	  updateRemainingCalories();
-	  updateConsumedCalories();
+
+	  calories.updateMealTotalCalories(mealName, { calories: calorieUpdate });
+	  calories.updateMealRemainingCalories(mealName, { calories: calorieUpdate });
+	  calories.updateRemainingCalories();
+	  calories.updateConsumedCalories();
 	}
 
 	function removeFoodFromMeal() {
@@ -10846,44 +10931,44 @@
 	  return $.ajax({
 	    url: `${API}meals/${id}`,
 	    method: 'DELETE'
-	  }).done(removeFoodFromMealTable(button)).fail(error => {
+	  }).then(removeFoodFromMealTable(button)).fail(error => {
 	    console.error(error);
 	  });
 	}
-	$(document).ready(function () {
-	  const diary = new Diary();
 
-	  $('#food-filter').on('input', function () {
-	    searchFoods();
-	  });
-
-	  diary.getFoods();
-
-	  diary.getDiary();
-
-	  $('#Breakfast').on('click', event => {
-	    diary.addMeal();
-	  });
-	  $('#Lunch').on('click', event => {
-	    diary.addMeal();
-	  });
-	  $('#Dinner').on('click', event => {
-	    diary.addMeal();
-	  });
-	  $('#Snacks').on('click', event => {
-	    diary.addMeal();
-	  });
+	$(document).ready(() => {
 	  $('body').on('click', '.remove', event => {
 	    removeFoodFromMeal();
 	  });
-	  $('body').on('click', '#prev-page-btn', event => {
-	    counter = counter - 1;
-	    diary.getPrevious();
-	  });
+	  $('form').on('submit', event => event.preventDefault());
+	});
 
-	  $('body').on('click', '#next-page-btn', event => {
-	    counter = counter + 1;
-	    diary.getNext();
+/***/ }),
+/* 13 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	const API = 'https://qs-be.herokuapp.com/api/v1/';
+	const LOCAL = 'http://localhost:3000/api/v1/';
+	const $ = __webpack_require__(2);
+	const diaryFoodTable = __webpack_require__(9);
+
+	function searchFoods() {
+	  let searchName = $('#food-filter').val();
+	  $('#diary-foods-body').html('');
+	  return $.ajax({
+	    url: `${API}search?searchName=${searchName}`,
+	    method: 'GET'
+	  }).then(data => {
+	    diaryFoodTable.makeFoodTable(data);
+	  }).fail(error => {
+	    console.error(error);
+	  });
+	}
+
+	$(document).ready(function () {
+
+	  $('#food-filter').on('input', function () {
+	    searchFoods();
 	  });
 
 	  $('form').on('submit', event => event.preventDefault());
